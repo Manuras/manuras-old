@@ -1,21 +1,28 @@
 /**
- * New node file
+ * Server for the Manuras Framework. Uses Connect to create the app and handle all incoming requests.
  */
-var http = require('http');
+var connect = require("connect");
+
+var http = require("http");
 var url = require("url");
 
-function start(router, port, logger) {
+function start(manuras, router, port) {
 	
-	function onRequest(request, response) {
-		 var pathname = url.parse(request.url).pathname;
-		
-		logger.info("A request on: " + pathname);
+	var app = connect();
 	
-		router.handle(pathname, request, response);
+	if(manuras.environment === manuras.environments["dev"]) {
+		app.use(connect.logger("short"));
 	}
+			
+	app.use(connect.static(manuras.public))
+	   	.use(function(request, response, next) {
+			var pathname = url.parse(request.url).pathname;
+			router.handle(pathname, request, response);
+	});
 	
-	http.createServer(onRequest).listen(port);
-	logger.write(logger.level.info, "Server has started.");
+	
+	http.createServer(app).listen(port);
+	console.log("Server has started on port: " + port);
 }
 
 exports.start = start;

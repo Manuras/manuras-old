@@ -1,29 +1,35 @@
 /**
- * Entry point of the Manuras Framework
+ * Entry point of the Manuras Framework test
  */
 
 var server = require("./server/server");
 var router = require("./routing/router");
-var logger = require("./logging/logger");
+var handlers = require("./server/handlers");
 
-// Set streams for the Logger
-logger.addStream(process.stdout);
 
 // Compile route file and apply routes
 
-var routes = {
-		home:
-			{ 
-				route: "/",
-				handler: "home"
-			},
-		user: 
-			{
-				route: "/user/{id}/{add}",
-				handler: "user",
-				//defaults: { id: 1 }
-			}
-};
+function run(config) {
+	
+	var routes = {
+			home:
+				{ 
+					route: "/",
+					handler: "home:index"
+				},
+			user: 
+				{
+					route: "/user/{id}",
+					handler: "user:show",
+					//defaults: { id: 1 }
+				}
+	};
 
-router.compile(routes);
-server.start(router, 8888, logger);
+	handlers.loadHandlers(config.handlers);
+	router.compile(handlers.handlers, routes);
+	
+	server.start(config, router, 8888);	
+}
+
+exports.run = run;
+

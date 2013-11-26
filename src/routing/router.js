@@ -1,10 +1,15 @@
 /**
- * New node file
+ * This file contains functions that handle the routing.
  */
 
+var handlers = {};
 var routes = {};
 
-function compile(rawRoutes) {
+function compile(handlers, rawRoutes) {
+	
+	this.handlers = handlers;
+	
+	console.log(handlers);
 	
 	for(var name in rawRoutes) {
 
@@ -25,12 +30,22 @@ function compile(rawRoutes) {
 				
 				routes[name]["optionals"] = optionals;
 				
-				// Generate regex from rout
-				
+				// Generate regex from route
 				regex = rawRoutes[name][key].replace(/{([^}]*)\}/g, "([^/.,;?]*)");
+				routes[name]["regex"] = new RegExp(regex); 
 				
-				routes[name]["regex"] = regex; 				
-			}	
+			} else if(key === "handler" && rawRoutes[name][key]) {
+				
+				// Get Handler and Action from the route
+				var handlerString = rawRoutes[name][key];
+				var handlerParts = handlerString.split(":");
+				
+				if(handlerParts.length !== 2) throw { "message": "Route Handler doesn't have two parts. The handler field should look like this: {handler}:{action}"};
+				
+				routes[name]["handler"] = handlerParts[0];
+				routes[name]["action"] = handlerParts[1];
+				
+			}
 		}
 	}
 	
@@ -39,7 +54,27 @@ function compile(rawRoutes) {
 }
 
 function handle(pathname, request, response) {
-	response.end();
+	
+	for(var key in routes) {
+		if(routes[key]["regex"].test(pathname)) {
+			
+			console.log("Route match found. Executing - " + routes[key]["handler"] + ":" + routes[key]["action"]);
+			
+			var handler = this.handlers[routes[key]["handler"]];
+			var f = handler["require"][routes[key]["action"]];
+			
+			console.log(handler);
+			
+			if(typeof f === "function") {
+				console.log("Action found. Excuting the function.");
+				f(request, response);
+			} else {
+				console.log("Action does not exists. This means the routes aren't correct.");
+			}
+			
+			response.end();
+		}
+	}
 }
 
 exports.compile = compile;
