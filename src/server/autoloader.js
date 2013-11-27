@@ -5,10 +5,10 @@
 var fs = require("fs");
 var path_module = require("path");
 
-var handlers = {};
+var controllers = {};
 var basePath = "";
 
-function loadHandlers(path) {
+function loadControllers(path) {
 	
 	if(basePath === "") { basePath = path; }
 	
@@ -21,13 +21,13 @@ function loadHandlers(path) {
 		
 		for(var i = 0; i < length; i++) {
 			f = path_module.join(path, files[i]);
-			loadHandlers(f);
+			loadControllers(f);
 		}
 	} else {	
 		name = path.replace(basePath, "").replace(".js", "").substring(1);
-		handlers[name] = { "path": path, "require": require(path) };
+		controllers[name] = { "path": path, "require": require(path) };
 	}
 }
 
-exports.loadHandlers = loadHandlers;
-exports.handlers = handlers;
+exports.loadControllers = loadControllers;
+exports.controllers = controllers;

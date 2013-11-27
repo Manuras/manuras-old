@@ -2,11 +2,12 @@
  * Entry point of the Manuras Framework test
  */
 
-var server = require("./server/server");
+var autoloader = require("./server/autoloader");
 var router = require("./routing/router");
-var handlers = require("./server/handlers");
+var server = require("./server/server");
 
-
+var RequestHandler = require("./server/requestHandler");
+	
 // Compile route file and apply routes
 
 function run(config) {
@@ -15,20 +16,22 @@ function run(config) {
 			home:
 				{ 
 					route: "/",
-					handler: "home:index"
+					controller: "home:index"
 				},
 			user: 
 				{
 					route: "/user/{id}",
-					handler: "user:show",
+					controller: "user:show",
 					//defaults: { id: 1 }
 				}
 	};
-
-	handlers.loadHandlers(config.handlers);
-	router.compile(handlers.handlers, routes);
 	
-	server.start(config, router, 8888);	
+	autoloader.loadControllers(config.controllers);
+	router.compile(autoloader.controllers, routes);
+	
+	requestHandler = new RequestHandler(router);
+	
+	server.start(config, requestHandler, 8888);	
 }
 
 exports.run = run;
