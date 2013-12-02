@@ -18,11 +18,11 @@ function compile(controllerFiles, rawRoutes) {
 				
 				// Get Optionals from route			
 				rawOptionals = rawRoutes[name][key].split(/{(.*?)}/);
-				optionals = {};
+				optionals = [];
 				
 				for(var i = 0; i < rawOptionals.length; i++) {
 					if(rawOptionals[i] !== "" && rawOptionals[i].indexOf("/") === -1) {
-						optionals[rawOptionals[i]] = 1;
+						optionals.push(rawOptionals[i]);
 					}
 				}
 				
@@ -51,14 +51,29 @@ function compile(controllerFiles, rawRoutes) {
 function findController(pathname, requestHandler) {
 	
 	for(var key in routes) {
-		if(routes[key]["regex"].test(pathname)) {
+		
+		var regexInfo = routes[key]["regex"].exec(pathname);
+		
+		if(regexInfo) {
 			
 			console.log("Route match found. Executing - " + routes[key]["controller"] + ":" + routes[key]["action"]);		
 			
-			var controllerInfo = controllers[routes[key]["controller"]];
+			var optionals = {};
+			
+			// If regexInfo length is greater than 1 than there are optionals so we will grab them and make them available in the controller
+			if(regexInfo.length > 1) {
+				for(var i = 1; i < regexInfo.length; i++) {
+					optionals[routes[key]["optionals"][i-1]] = regexInfo[i];
+				}
+			}
+
+			
+			// Get the action from the controller cache
+			var controllerInfo = controllers[routes[key]["controller"]];			
 			var action = controllerInfo["require"][routes[key]["action"]];
 			
-			return action;
+			// Pack the info we gathered into a single object and return it
+			return { "action": action, "optionals": optionals };
 		}
 	}
 	

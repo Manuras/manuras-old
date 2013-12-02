@@ -8,13 +8,17 @@ RequestHandler.prototype = new events.EventEmitter;
 
 RequestHandler.prototype.handle = function(pathname, controller, callback) {
 	
-	var action = this.router.findController(pathname, this);
+	var routeResults = this.router.findController(pathname, this);
+	
+	var action = routeResults.action;
+	var optionals = routeResults.optionals;
 	
 	if(action) {
 		if(typeof action === "function") {
 			
-			console.log("Action found. Executing the function.");
-			
+			console.log("Action found. Insert additional data and execute the function.");
+		
+			controller.request.params = optionals;
 			controller.callback = callback;
 			
 			controller.action = action;

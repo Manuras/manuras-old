@@ -2,8 +2,8 @@
  * This file contains the functions to load and get handlers.
  */
 
-var fs = require("fs");
-var path_module = require("path");
+var fs = require("fs")
+	, path_module = require("path");
 
 var controllers = {};
 var basePath = "";
@@ -11,7 +11,7 @@ var basePath = "";
 function loadControllers(path) {
 	
 	if(basePath === "") { basePath = path; }
-	
+
 	var stats = fs.lstatSync(path);
 	
 	if(stats.isDirectory()) {
