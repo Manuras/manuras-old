@@ -2,6 +2,8 @@
  * This file contains the wrapper for the node.js response object. It has additional functions build upon the original response object.
  */
 
+var Cookie = require("./../../http/cookie");
+
 function Response(res) {
 	this.internal = res;
 	
@@ -16,14 +18,29 @@ Response.prototype.contentLength = function() {
 	return this.content.length;
 };
 
+Response.prototype.cookie = function(name, val, options) {
+	var cookie = new Cookie(name,val,options);
+	this.headers("Set-Cookie", cookie.serialize());
+};
+
 Response.prototype.headers = function(key, value) {
 	
 	if(typeof key !== "undefined" && typeof key === "string") {
 		
 		if(typeof value !== "undefined") {
-			this._headers[key] = value;
-		}
 		
+			// Set Cookie can have multiple headers, so we need to handle it a little different
+			if(key === "Set-Cookie") {
+				if(typeof this._headers[key] === "undefined") {
+					this._headers[key] = [];
+				}
+				
+				this._headers[key].push(value);
+			} else {
+				this._headers[key] = value;
+			}
+		}
+			
 		return this._headers[key];
 		
 	} else if(typeof key !== "undefined" && key !== null && Object.prototype.toString.call(key) == "[object Object]") {
