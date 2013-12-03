@@ -1,21 +1,24 @@
+var Cookie = require("./../../http/cookie");
+
 /**
  * This file contains the wrapper for the node.js response object. It has additional functions build upon the original response object.
  */
-
-var Cookie = require("./../../http/cookie");
-
 function Response(res) {
 	this.internal = res;
 	
-	this.content = "";
+	this.body = "";
 	this._headers = {};
 	
 	this._status = 200;
 	this._protocol = "HTTP/1.1";
 }
 
+/**
+ * Returns the content length of the current body.
+ * @returns
+ */
 Response.prototype.contentLength = function() {
-	return this.content.length;
+	return this.body.length;
 };
 
 Response.prototype.cookie = function(name, val, options) {
