@@ -49,6 +49,7 @@ function start(requestHandler, port, root) {
 			.use(connect.cookieParser())
 			.use(connect.urlencoded())
 			.use(connect.json())
+			.use(connect.logger())
 		   	.use(handleRequest(settings));
 		
 		http.createServer(app).listen(port);
