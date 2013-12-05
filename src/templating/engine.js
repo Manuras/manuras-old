@@ -29,7 +29,7 @@ function render(file, data, templateEngine, callback) {
 				});
 				break;
 			case "file":
-				renderFile(engines[templateEngine], viewPath, data, function(err,date) {
+				renderFile(engines[templateEngine], viewPath, data, function(err,data) {
 					callback(err,data);
 				});
 				break;
@@ -50,7 +50,10 @@ function render(file, data, templateEngine, callback) {
  * @returns rendered page
  */
 function renderString(engine, path, data, callback) {
-	engine.render(getFileContent(path), data, function(err,data) {
+	
+	var settings = config.getSettings();
+	
+	engine.render(getFileContent(path, settings.templating.encoding), data, function(err,data) {
 		callback(err,data);
 	});
 }
@@ -77,7 +80,7 @@ function renderFile(engine, path, data, callback) {
  * @param extension
  * @returns
  */
-function getFileContent(path, extension) {
+function getFileContent(path, encoding, extension) {
 	if(typeof(extension) !== "string") {
 		extension = ".html";
 	}
@@ -87,7 +90,7 @@ function getFileContent(path, extension) {
 	var filePath = path + extension;
 	
 	try {
-		return fs.readFileSync(filePath, settings.templating.encoding);
+		return fs.readFileSync(filePath, encoding);
 	} catch(err) {
 		throw err;
 	}
@@ -121,9 +124,6 @@ function loadEngines(rootPath) {
 		name = files[i].replace(".js", "");
 		
 		var filePath = path_module.join(path, files[i]);
-		
-		console.log(require(filePath));
-		
 		addEngine(name, require(filePath));
 	}
 }

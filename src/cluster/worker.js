@@ -1,56 +1,57 @@
+var path = require("path");
 
-console.log("Worker started.");
-console.log("Worker waiting for message from server.");
+var autoloader = require("./../server/autoloader")
+	, config = require("./../config")
+	, server = require("./../server")
+	, templateEngine = require("./../templating/engine");
 
-process.on('message', function(message) {
+var _router = require("./../routing/router");
+
+function Worker() {
+	this.router;
 	
-	console.log("Message received. Let's start the server.");
-	
-});
+	this.root;
+	this.settings;
+}
 
-var autoloader = require("./server/autoloader")
-	, config = require("./../config") 
-	, server = require("./../server");
+Worker.prototype.start = function() {
+	console.log("Worker started.");
+	console.log("Worker waiting for message from server.");
 
-var routes = {
-		home:
-			{ 
-				route: "/",
-				controller: "home:index"
-			},
-		user: 
-			{
-				route: "/user/{id}/{action}",
-				controller: "user:show",
-				//defaults: { id: 1 }
-			},
-		ejs:
-			{
-				route: "/ejs",
-				controller: "templateEngines:ejs"
-			},
-		jade:
-			{
-				route: "/jade",
-				controller: "templateEngines:jade"
-			},
-		mustache:
-			{
-				route: "/mustache",
-				controller: "templateEngines:mustache"
-			},
-		underscore:
-			{
-				route: "/underscore",
-				controller: "templateEngines:underscore"
+	process.on('message', function(message) {
+		
+		this.root = message.root;
+		
+		console.log("Message received. Let's start the http server for this worker.");
+
+		this.settings = config.loadConfig(this.root);
+		
+		// Setting up environment
+		process.env.NODE_ENV = (typeof process.env.NODE_ENV) !== "undefined" ? process.env.NODE_ENV : this.settings.app.env.dev;
+
+		console.log(process.env.NODE_ENV);
+		
+		// Load controllers from the controllers directory
+		autoloader.loadControllers(path.join(this.root, this.settings.paths.controllers));
+		
+		// Compile the routes and check if they are valid
+		this.router = _router;
+		var self = this;
+		
+		_router.loadRoutes(path.join(this.root, this.settings.paths.routes), function(err) {
+			if(typeof err === "undefined") {
+				_router.compile(autoloader.controllers);
+				
+				// Load all template engines.
+				templateEngine.loadEngines(self.root);
+				
+				// Start http server
+				server.start(self, self.settings.server.port);
+			} else {
+				throw Error(err.msg);
 			}
+		});				
+	});
 };
 
-var settings = config.loadConfig();
-
-autoloader.loadControllers(path.join(root, settings.paths.controllers));
-router.compile(autoloader.controllers, routes);
-
-templateEngine.loadEngines(root);
-
-requestHandler = new RequestHandler(router);
+module.exports = Worker;

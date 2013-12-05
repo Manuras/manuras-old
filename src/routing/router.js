@@ -2,10 +2,14 @@
  * This file contains functions that handle the routing.
  */
 
+var fs = require("fs")
+	, path = require("path");
+
 var controllers = {};
+var rawRoutes = {};
 var routes = {};
 
-function compile(controllerFiles, rawRoutes) {
+function compile(controllerFiles) {
 	
 	controllers = controllerFiles;
 	
@@ -13,7 +17,7 @@ function compile(controllerFiles, rawRoutes) {
 
 		routes[name] = {};
 		
-		for(var key in rawRoutes[name]) {	
+		for(var key in rawRoutes[name]) {
 			if(key === "route" && rawRoutes[name][key]) {		
 				
 				// Get Optionals from route			
@@ -48,6 +52,17 @@ function compile(controllerFiles, rawRoutes) {
 	}
 }
 
+function loadRoutes(file, callback) {
+	fs.exists(file, function(exists) {
+		if(exists) {
+			rawRoutes = require(file);
+			callback();
+		} else {
+			callback({msg: "Routes file doesn't exists. Check if the file exists or change the path in the settings file."});
+		}
+	});
+}
+
 function findController(pathname, requestHandler) {
 	
 	for(var key in routes) {
@@ -67,7 +82,6 @@ function findController(pathname, requestHandler) {
 				}
 			}
 
-			
 			// Get the action from the controller cache
 			var controllerInfo = controllers[routes[key]["controller"]];			
 			var action = controllerInfo["require"][routes[key]["action"]];
@@ -81,4 +95,5 @@ function findController(pathname, requestHandler) {
 }
 
 exports.compile = compile;
+exports.loadRoutes = loadRoutes;
 exports.findController = findController;
