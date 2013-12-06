@@ -1,1 +1,1 @@
-module.exports = require("./src/bootstrap");
+module.exports = require('./lib/bootstrap');
